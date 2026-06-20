@@ -1,0 +1,1681 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Inspection Support Services — Add-On Revenue for Arizona Home Inspectors</title>
+  <meta name="description" content="Stop referring business away. ISS lets Arizona home inspectors offer sewer scope, radon, air quality, and solar assessment under their own brand — with zero equipment, zero certification, and zero overhead." />
+  <link rel="icon" type="image/jpeg" href="iss-logo-v5-minimal-primary.jpg" />
+
+  <!-- Google Fonts -->
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;600;700&family=Inter:wght@300;400;500;600&display=swap" rel="stylesheet" />
+
+  <style>
+    /* ============================
+       CSS RESET + BASE
+    ============================ */
+    *, *::before, *::after {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    :root {
+      --bg:           #0F1E35;
+      --panel:        #1A2E4A;
+      --panel-light:  #1E3455;
+      --accent:       #3DB088;
+      --accent-dark:  #2E9070;
+      --accent-glow:  rgba(61, 176, 136, 0.15);
+      --text-primary: #F5F5F7;
+      --text-secondary: #A1A5B0;
+      --text-dim:     #6B7280;
+      --success:      #4ADE80;
+      --warning:      #FBBF24;
+      --border:       rgba(255,255,255,0.08);
+      --border-accent: rgba(61, 176, 136, 0.3);
+      --font-heading: 'Playfair Display', Georgia, serif;
+      --font-body:    'Inter', system-ui, sans-serif;
+      --radius:       12px;
+      --radius-sm:    8px;
+      --shadow:       0 4px 24px rgba(0,0,0,0.4);
+      --shadow-lg:    0 8px 48px rgba(0,0,0,0.6);
+    }
+
+    html {
+      scroll-behavior: smooth;
+    }
+
+    body {
+      font-family: var(--font-body);
+      background-color: var(--bg);
+      color: var(--text-primary);
+      line-height: 1.6;
+      -webkit-font-smoothing: antialiased;
+    }
+
+    img {
+      max-width: 100%;
+      height: auto;
+      display: block;
+    }
+
+    a {
+      color: var(--accent);
+      text-decoration: none;
+    }
+
+    a:hover {
+      text-decoration: underline;
+    }
+
+    /* ============================
+       LAYOUT UTILITIES
+    ============================ */
+    .container {
+      max-width: 1100px;
+      margin: 0 auto;
+      padding: 0 24px;
+    }
+
+    .section {
+      padding: 80px 0;
+    }
+
+    .section--alt {
+      background-color: var(--panel);
+    }
+
+    .section--darker {
+      background-color: rgba(0,0,0,0.2);
+    }
+
+    .section-label {
+      font-family: var(--font-body);
+      font-size: 11px;
+      font-weight: 600;
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+      color: var(--accent);
+      margin-bottom: 12px;
+    }
+
+    .section-heading {
+      font-family: var(--font-heading);
+      font-size: clamp(2rem, 4vw, 2.8rem);
+      font-weight: 700;
+      line-height: 1.2;
+      margin-bottom: 20px;
+      color: var(--text-primary);
+    }
+
+    .section-subhead {
+      font-size: 1.1rem;
+      color: var(--text-secondary);
+      max-width: 640px;
+      line-height: 1.7;
+    }
+
+    .text-accent {
+      color: var(--accent);
+    }
+
+    .text-center {
+      text-align: center;
+    }
+
+    .text-center .section-subhead {
+      margin-left: auto;
+      margin-right: auto;
+    }
+
+    /* ============================
+       BUTTONS
+    ============================ */
+    .btn {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      padding: 14px 28px;
+      border-radius: var(--radius-sm);
+      font-family: var(--font-body);
+      font-size: 1rem;
+      font-weight: 600;
+      cursor: pointer;
+      border: none;
+      transition: all 0.2s ease;
+      text-decoration: none;
+      white-space: nowrap;
+    }
+
+    .btn-primary {
+      background-color: var(--accent);
+      color: #fff;
+    }
+
+    .btn-primary:hover {
+      background-color: var(--accent-dark);
+      transform: translateY(-1px);
+      box-shadow: 0 6px 24px rgba(61,176,136,0.3);
+      text-decoration: none;
+    }
+
+    .btn-outline {
+      background: transparent;
+      border: 2px solid var(--accent);
+      color: var(--accent);
+    }
+
+    .btn-outline:hover {
+      background: var(--accent-glow);
+      text-decoration: none;
+    }
+
+    .btn-lg {
+      padding: 18px 36px;
+      font-size: 1.1rem;
+      border-radius: var(--radius);
+    }
+
+    /* ============================
+       NAV
+    ============================ */
+    .nav {
+      position: sticky;
+      top: 0;
+      z-index: 100;
+      background-color: rgba(15,30,53,0.95);
+      backdrop-filter: blur(12px);
+      -webkit-backdrop-filter: blur(12px);
+      border-bottom: 1px solid var(--border);
+    }
+
+    .nav-inner {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 16px 24px;
+      max-width: 1100px;
+      margin: 0 auto;
+    }
+
+    .nav-logo {
+      display: flex;
+      align-items: center;
+    }
+
+    .nav-logo img {
+      height: 44px;
+      width: auto;
+      object-fit: contain;
+    }
+
+    .nav-links {
+      display: flex;
+      align-items: center;
+      gap: 32px;
+      list-style: none;
+    }
+
+    .nav-links a {
+      color: var(--text-secondary);
+      font-size: 0.9rem;
+      font-weight: 500;
+      transition: color 0.2s;
+    }
+
+    .nav-links a:hover {
+      color: var(--text-primary);
+      text-decoration: none;
+    }
+
+    .nav-cta {
+      display: flex;
+      align-items: center;
+      gap: 16px;
+    }
+
+    @media (max-width: 768px) {
+      .nav-links { display: none; }
+      .nav-logo img { height: 36px; }
+    }
+
+    /* ============================
+       HERO
+    ============================ */
+    .hero {
+      padding: 100px 0 80px;
+      position: relative;
+      overflow: hidden;
+    }
+
+    .hero::before {
+      content: '';
+      position: absolute;
+      top: -200px;
+      right: -200px;
+      width: 600px;
+      height: 600px;
+      background: radial-gradient(circle, rgba(61,176,136,0.08) 0%, transparent 70%);
+      pointer-events: none;
+    }
+
+    .hero-inner {
+      max-width: 1100px;
+      margin: 0 auto;
+      padding: 0 24px;
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 60px;
+      align-items: center;
+    }
+
+    .hero-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      background: var(--accent-glow);
+      border: 1px solid var(--border-accent);
+      border-radius: 100px;
+      padding: 6px 14px;
+      font-size: 0.8rem;
+      font-weight: 600;
+      color: var(--accent);
+      margin-bottom: 24px;
+    }
+
+    .hero-badge-dot {
+      width: 6px;
+      height: 6px;
+      border-radius: 50%;
+      background-color: var(--accent);
+      animation: pulse 2s infinite;
+    }
+
+    @keyframes pulse {
+      0%, 100% { opacity: 1; }
+      50% { opacity: 0.4; }
+    }
+
+    .hero-headline {
+      font-family: var(--font-heading);
+      font-size: clamp(2.2rem, 4.5vw, 3.4rem);
+      font-weight: 700;
+      line-height: 1.15;
+      margin-bottom: 24px;
+      color: var(--text-primary);
+    }
+
+    .hero-headline span {
+      color: var(--accent);
+    }
+
+    .hero-subhead {
+      font-size: 1.15rem;
+      color: var(--text-secondary);
+      line-height: 1.75;
+      margin-bottom: 36px;
+    }
+
+    .hero-cta-group {
+      display: flex;
+      align-items: center;
+      gap: 16px;
+      margin-bottom: 36px;
+      flex-wrap: wrap;
+    }
+
+    .hero-trust {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 16px;
+    }
+
+    .trust-badge {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      font-size: 0.82rem;
+      font-weight: 500;
+      color: var(--text-secondary);
+    }
+
+    .trust-icon {
+      color: var(--accent);
+      font-size: 0.9rem;
+    }
+
+    /* VSL placeholder */
+    .hero-visual {
+      position: relative;
+    }
+
+    .vsl-card {
+      position: relative;
+      background: var(--panel);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      overflow: hidden;
+      aspect-ratio: 16/9;
+      cursor: pointer;
+      transition: border-color 0.2s;
+    }
+
+    .vsl-card:hover {
+      border-color: var(--border-accent);
+    }
+
+    .vsl-thumbnail {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      opacity: 0.3;
+      background: linear-gradient(135deg, #1A3A5C 0%, #0F2240 100%);
+    }
+
+    .vsl-overlay {
+      position: absolute;
+      inset: 0;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      gap: 16px;
+      background: linear-gradient(135deg, rgba(15,30,53,0.6) 0%, rgba(26,46,74,0.4) 100%);
+    }
+
+    .vsl-play {
+      width: 72px;
+      height: 72px;
+      background: var(--accent);
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      transition: transform 0.2s, box-shadow 0.2s;
+      box-shadow: 0 0 0 8px rgba(61,176,136,0.15);
+    }
+
+    .vsl-card:hover .vsl-play {
+      transform: scale(1.05);
+      box-shadow: 0 0 0 12px rgba(61,176,136,0.2);
+    }
+
+    .vsl-play svg {
+      width: 28px;
+      height: 28px;
+      fill: white;
+      margin-left: 4px;
+    }
+
+    .vsl-label {
+      font-size: 0.95rem;
+      font-weight: 600;
+      color: var(--text-primary);
+      text-align: center;
+    }
+
+    .vsl-duration {
+      font-size: 0.8rem;
+      color: var(--text-secondary);
+    }
+
+    .vsl-coming-soon {
+      position: absolute;
+      top: 12px;
+      right: 12px;
+      background: rgba(0,0,0,0.6);
+      padding: 4px 10px;
+      border-radius: 100px;
+      font-size: 0.72rem;
+      font-weight: 600;
+      color: var(--text-secondary);
+      letter-spacing: 0.05em;
+      text-transform: uppercase;
+    }
+
+    @media (max-width: 768px) {
+      .hero-inner {
+        grid-template-columns: 1fr;
+        gap: 40px;
+      }
+
+      .hero {
+        padding: 60px 0 60px;
+      }
+    }
+
+    /* ============================
+       PROBLEM / REVENUE MATH
+    ============================ */
+    .revenue-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+      gap: 20px;
+      margin: 40px 0;
+    }
+
+    .revenue-card {
+      background: var(--panel);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 28px;
+      position: relative;
+      overflow: hidden;
+    }
+
+    .revenue-card::before {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: 0;
+      right: 0;
+      height: 3px;
+      background: var(--accent);
+      opacity: 0.5;
+    }
+
+    .revenue-scenario {
+      font-size: 0.8rem;
+      font-weight: 600;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      color: var(--text-dim);
+      margin-bottom: 12px;
+    }
+
+    .revenue-action {
+      font-size: 1rem;
+      color: var(--text-secondary);
+      margin-bottom: 16px;
+      line-height: 1.5;
+    }
+
+    .revenue-result {
+      display: flex;
+      align-items: baseline;
+      gap: 6px;
+    }
+
+    .revenue-amount {
+      font-family: var(--font-heading);
+      font-size: 2.2rem;
+      font-weight: 700;
+      color: var(--warning);
+    }
+
+    .revenue-label {
+      font-size: 0.85rem;
+      color: var(--text-dim);
+    }
+
+    .revenue-divider {
+      display: flex;
+      align-items: center;
+      gap: 16px;
+      margin: 32px 0;
+    }
+
+    .revenue-divider-line {
+      flex: 1;
+      height: 1px;
+      background: var(--border);
+    }
+
+    .revenue-divider-text {
+      font-size: 0.85rem;
+      color: var(--text-dim);
+      white-space: nowrap;
+    }
+
+    .annual-callout {
+      background: linear-gradient(135deg, rgba(61,176,136,0.1) 0%, rgba(61,176,136,0.05) 100%);
+      border: 1px solid var(--border-accent);
+      border-radius: var(--radius);
+      padding: 32px;
+      text-align: center;
+    }
+
+    .annual-callout .annual-label {
+      font-size: 0.9rem;
+      color: var(--text-secondary);
+      margin-bottom: 8px;
+    }
+
+    .annual-callout .annual-number {
+      font-family: var(--font-heading);
+      font-size: clamp(2.5rem, 5vw, 3.8rem);
+      font-weight: 700;
+      color: var(--success);
+      margin-bottom: 8px;
+    }
+
+    .annual-callout .annual-note {
+      font-size: 0.85rem;
+      color: var(--text-dim);
+    }
+
+    .math-breakdown {
+      background: var(--panel);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 32px;
+      margin: 32px 0;
+    }
+
+    .math-row {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 12px 0;
+      border-bottom: 1px solid var(--border);
+      gap: 16px;
+    }
+
+    .math-row:last-child {
+      border-bottom: none;
+      padding-bottom: 0;
+    }
+
+    .math-row-label {
+      font-size: 0.95rem;
+      color: var(--text-secondary);
+      flex: 1;
+    }
+
+    .math-row-math {
+      font-size: 0.85rem;
+      color: var(--text-dim);
+      text-align: right;
+    }
+
+    .math-row-total {
+      font-size: 1rem;
+      font-weight: 700;
+      color: var(--success);
+      min-width: 100px;
+      text-align: right;
+    }
+
+    .math-footer {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding-top: 20px;
+      margin-top: 8px;
+      border-top: 2px solid var(--border-accent);
+    }
+
+    .math-footer-label {
+      font-size: 1rem;
+      font-weight: 600;
+      color: var(--text-primary);
+    }
+
+    .math-footer-total {
+      font-family: var(--font-heading);
+      font-size: 1.6rem;
+      font-weight: 700;
+      color: var(--success);
+    }
+
+    /* ============================
+       HOW IT WORKS
+    ============================ */
+    .steps-grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 32px;
+      margin-top: 48px;
+      position: relative;
+    }
+
+    .steps-grid::before {
+      content: '';
+      position: absolute;
+      top: 36px;
+      left: calc(16.66% + 32px);
+      right: calc(16.66% + 32px);
+      height: 2px;
+      background: linear-gradient(90deg, var(--accent) 0%, var(--accent) 100%);
+      opacity: 0.3;
+    }
+
+    .step-card {
+      background: var(--panel);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 32px 28px;
+      text-align: center;
+      position: relative;
+    }
+
+    .step-number {
+      width: 56px;
+      height: 56px;
+      background: var(--accent);
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-family: var(--font-heading);
+      font-size: 1.4rem;
+      font-weight: 700;
+      color: white;
+      margin: 0 auto 20px;
+    }
+
+    .step-title {
+      font-family: var(--font-heading);
+      font-size: 1.2rem;
+      font-weight: 600;
+      margin-bottom: 12px;
+      color: var(--text-primary);
+    }
+
+    .step-body {
+      font-size: 0.95rem;
+      color: var(--text-secondary);
+      line-height: 1.65;
+    }
+
+    @media (max-width: 768px) {
+      .steps-grid {
+        grid-template-columns: 1fr;
+        gap: 20px;
+      }
+
+      .steps-grid::before {
+        display: none;
+      }
+    }
+
+    /* ============================
+       PRICING TABLE
+    ============================ */
+    .pricing-table-wrap {
+      margin-top: 40px;
+      overflow-x: auto;
+      border-radius: var(--radius);
+      border: 1px solid var(--border);
+    }
+
+    .pricing-table {
+      width: 100%;
+      border-collapse: collapse;
+      background: var(--panel);
+    }
+
+    .pricing-table th {
+      background: var(--panel-light);
+      padding: 16px 20px;
+      text-align: left;
+      font-size: 0.8rem;
+      font-weight: 600;
+      letter-spacing: 0.06em;
+      text-transform: uppercase;
+      color: var(--text-secondary);
+      white-space: nowrap;
+    }
+
+    .pricing-table th:first-child {
+      border-radius: var(--radius-sm) 0 0 0;
+    }
+
+    .pricing-table th:last-child {
+      border-radius: 0 var(--radius-sm) 0 0;
+      text-align: right;
+    }
+
+    .pricing-table td {
+      padding: 18px 20px;
+      border-bottom: 1px solid var(--border);
+      font-size: 0.95rem;
+      color: var(--text-secondary);
+      vertical-align: middle;
+    }
+
+    .pricing-table tr:last-child td {
+      border-bottom: none;
+    }
+
+    .pricing-table td.service-name {
+      font-weight: 600;
+      color: var(--text-primary);
+    }
+
+    .pricing-table td.spread {
+      font-weight: 700;
+      color: var(--success);
+      font-size: 1rem;
+      text-align: right;
+    }
+
+    .pricing-table td.cost-you {
+      color: var(--text-secondary);
+    }
+
+    .pricing-table td.client-pays {
+      color: var(--text-primary);
+    }
+
+    .pricing-notes {
+      margin-top: 20px;
+      display: flex;
+      flex-wrap: wrap;
+      gap: 12px;
+    }
+
+    .pricing-note {
+      background: var(--accent-glow);
+      border: 1px solid var(--border-accent);
+      border-radius: var(--radius-sm);
+      padding: 10px 16px;
+      font-size: 0.85rem;
+      color: var(--accent);
+      font-weight: 500;
+    }
+
+    /* ============================
+       WHAT YOU GET
+    ============================ */
+    .perks-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+      gap: 24px;
+      margin-top: 40px;
+    }
+
+    .perk-card {
+      background: var(--panel);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 28px;
+      display: flex;
+      gap: 16px;
+      align-items: flex-start;
+      transition: border-color 0.2s;
+    }
+
+    .perk-card:hover {
+      border-color: var(--border-accent);
+    }
+
+    .perk-icon {
+      width: 44px;
+      height: 44px;
+      background: var(--accent-glow);
+      border-radius: var(--radius-sm);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 1.2rem;
+      flex-shrink: 0;
+    }
+
+    .perk-content h3 {
+      font-size: 1rem;
+      font-weight: 600;
+      margin-bottom: 6px;
+      color: var(--text-primary);
+    }
+
+    .perk-content p {
+      font-size: 0.88rem;
+      color: var(--text-secondary);
+      line-height: 1.6;
+    }
+
+    .first-job-banner {
+      background: linear-gradient(135deg, rgba(74,222,128,0.1) 0%, rgba(61,176,136,0.05) 100%);
+      border: 1px solid rgba(74,222,128,0.3);
+      border-radius: var(--radius);
+      padding: 28px 32px;
+      margin-top: 32px;
+      display: flex;
+      align-items: center;
+      gap: 20px;
+    }
+
+    .first-job-icon {
+      font-size: 2rem;
+      flex-shrink: 0;
+    }
+
+    .first-job-text h3 {
+      font-size: 1.1rem;
+      font-weight: 700;
+      color: var(--success);
+      margin-bottom: 6px;
+    }
+
+    .first-job-text p {
+      font-size: 0.9rem;
+      color: var(--text-secondary);
+    }
+
+    @media (max-width: 600px) {
+      .first-job-banner {
+        flex-direction: column;
+        text-align: center;
+      }
+    }
+
+    /* ============================
+       WHO THIS IS FOR
+    ============================ */
+    .criteria-list {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+      gap: 16px;
+      margin-top: 36px;
+    }
+
+    .criteria-item {
+      display: flex;
+      align-items: flex-start;
+      gap: 14px;
+      background: var(--panel);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-sm);
+      padding: 20px;
+    }
+
+    .criteria-check {
+      width: 28px;
+      height: 28px;
+      background: var(--accent-glow);
+      border: 1px solid var(--border-accent);
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      flex-shrink: 0;
+      color: var(--accent);
+      font-size: 0.75rem;
+      font-weight: 700;
+    }
+
+    .criteria-text {
+      font-size: 0.95rem;
+      color: var(--text-secondary);
+      line-height: 1.5;
+    }
+
+    /* ============================
+       FAQ
+    ============================ */
+    .faq-list {
+      margin-top: 40px;
+      display: flex;
+      flex-direction: column;
+      gap: 2px;
+      border-radius: var(--radius);
+      overflow: hidden;
+      border: 1px solid var(--border);
+    }
+
+    .faq-item {
+      background: var(--panel);
+      border-bottom: 1px solid var(--border);
+    }
+
+    .faq-item:last-child {
+      border-bottom: none;
+    }
+
+    .faq-question {
+      width: 100%;
+      text-align: left;
+      padding: 22px 28px;
+      background: none;
+      border: none;
+      cursor: pointer;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 16px;
+      color: var(--text-primary);
+      font-family: var(--font-body);
+      font-size: 1rem;
+      font-weight: 600;
+      transition: background-color 0.2s;
+    }
+
+    .faq-question:hover {
+      background: var(--panel-light);
+    }
+
+    .faq-icon {
+      width: 24px;
+      height: 24px;
+      background: var(--accent-glow);
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 1rem;
+      color: var(--accent);
+      flex-shrink: 0;
+      transition: transform 0.2s;
+    }
+
+    .faq-item.open .faq-icon {
+      transform: rotate(45deg);
+    }
+
+    .faq-answer {
+      padding: 0 28px;
+      max-height: 0;
+      overflow: hidden;
+      transition: max-height 0.3s ease, padding 0.2s ease;
+    }
+
+    .faq-item.open .faq-answer {
+      max-height: 200px;
+      padding-bottom: 22px;
+    }
+
+    .faq-answer p {
+      font-size: 0.95rem;
+      color: var(--text-secondary);
+      line-height: 1.7;
+    }
+
+    /* ============================
+       APPLICATION FORM SECTION
+    ============================ */
+    .apply-section {
+      padding: 80px 0;
+    }
+
+    .apply-inner {
+      max-width: 760px;
+      margin: 0 auto;
+      padding: 0 24px;
+      text-align: center;
+    }
+
+    .scarcity-banner {
+      background: linear-gradient(135deg, rgba(251,191,36,0.12) 0%, rgba(251,191,36,0.05) 100%);
+      border: 1px solid rgba(251,191,36,0.3);
+      border-radius: var(--radius);
+      padding: 20px 28px;
+      margin-bottom: 36px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 12px;
+      flex-wrap: wrap;
+    }
+
+    .scarcity-icon {
+      font-size: 1.1rem;
+    }
+
+    .scarcity-text {
+      font-size: 0.95rem;
+      font-weight: 600;
+      color: var(--warning);
+    }
+
+    .scarcity-text span {
+      font-weight: 700;
+    }
+
+    .ghl-form-wrap {
+      background: var(--panel);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 8px;
+      margin: 32px 0;
+    }
+
+    /* GHL FORM EMBED — paste GoHighLevel form embed code here when ready */
+    .ghl-form-embed {
+      min-height: 400px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .ghl-placeholder {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 12px;
+      color: var(--text-dim);
+      padding: 48px;
+    }
+
+    .ghl-placeholder .placeholder-icon {
+      font-size: 2rem;
+      opacity: 0.5;
+    }
+
+    .ghl-placeholder p {
+      font-size: 0.9rem;
+    }
+
+    .form-note {
+      font-size: 0.88rem;
+      color: var(--text-secondary);
+      line-height: 1.65;
+    }
+
+    /* ============================
+       FOOTER
+    ============================ */
+    .footer {
+      background: rgba(0,0,0,0.3);
+      border-top: 1px solid var(--border);
+      padding: 48px 0;
+    }
+
+    .footer-inner {
+      max-width: 1100px;
+      margin: 0 auto;
+      padding: 0 24px;
+      display: flex;
+      flex-direction: column;
+      gap: 32px;
+    }
+
+    .footer-top {
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-start;
+      flex-wrap: wrap;
+      gap: 32px;
+    }
+
+    .footer-logo img {
+      height: 40px;
+      width: auto;
+      object-fit: contain;
+      opacity: 0.8;
+    }
+
+    .footer-links {
+      display: flex;
+      gap: 24px;
+      flex-wrap: wrap;
+      list-style: none;
+    }
+
+    .footer-links a {
+      color: var(--text-secondary);
+      font-size: 0.88rem;
+      font-weight: 500;
+      transition: color 0.2s;
+    }
+
+    .footer-links a:hover {
+      color: var(--text-primary);
+      text-decoration: none;
+    }
+
+    .footer-contact a {
+      color: var(--text-secondary);
+      font-size: 0.88rem;
+    }
+
+    .footer-bottom {
+      border-top: 1px solid var(--border);
+      padding-top: 24px;
+      font-size: 0.82rem;
+      color: var(--text-dim);
+      line-height: 1.6;
+    }
+
+    /* ============================
+       UTILITIES
+    ============================ */
+    .sr-only {
+      position: absolute;
+      width: 1px;
+      height: 1px;
+      padding: 0;
+      margin: -1px;
+      overflow: hidden;
+      clip: rect(0,0,0,0);
+      white-space: nowrap;
+      border: 0;
+    }
+
+    .mt-8 { margin-top: 8px; }
+    .mt-16 { margin-top: 16px; }
+    .mt-24 { margin-top: 24px; }
+    .mt-32 { margin-top: 32px; }
+    .mt-48 { margin-top: 48px; }
+
+    /* ============================
+       RESPONSIVE HELPERS
+    ============================ */
+    @media (max-width: 600px) {
+      .section { padding: 60px 0; }
+      .hero-cta-group { flex-direction: column; align-items: flex-start; }
+      .revenue-grid { grid-template-columns: 1fr; }
+      .pricing-table { font-size: 0.85rem; }
+      .faq-question { font-size: 0.95rem; padding: 18px 20px; }
+      .faq-answer { padding: 0 20px; }
+      .faq-item.open .faq-answer { padding-bottom: 18px; }
+    }
+  </style>
+</head>
+
+<body>
+
+  <!-- ========== NAV ========== -->
+  <header class="nav" role="banner">
+    <div class="nav-inner">
+      <div class="nav-logo">
+        <a href="#top" aria-label="Inspection Support Services — Home">
+          <img src="iss-logo-v2-horizontal-lockup.jpg" alt="Inspection Support Services" />
+        </a>
+      </div>
+      <nav aria-label="Primary navigation">
+        <ul class="nav-links">
+          <li><a href="#how-it-works">How It Works</a></li>
+          <li><a href="#services">Services</a></li>
+          <li><a href="#faq">FAQ</a></li>
+        </ul>
+      </nav>
+      <div class="nav-cta">
+        <a href="#apply" class="btn btn-primary">Apply Now</a>
+      </div>
+    </div>
+  </header>
+
+  <!-- ========== HERO ========== -->
+  <section class="hero" id="top" aria-labelledby="hero-headline">
+    <div class="hero-inner">
+      <div class="hero-content">
+        <div class="hero-badge">
+          <span class="hero-badge-dot" aria-hidden="true"></span>
+          Arizona home inspectors only
+        </div>
+        <h1 class="hero-headline" id="hero-headline">
+          Stop Referring Business Away.<br />
+          <span>Start Getting Paid for It.</span>
+        </h1>
+        <p class="hero-subhead">
+          You're already at the inspection. Your client is already asking about sewer lines, radon, air quality, and solar. ISS lets you say yes — without buying equipment, getting certified, or managing subcontractors.
+        </p>
+        <div class="hero-cta-group">
+          <a href="#apply" class="btn btn-primary btn-lg">Apply to Join the Network</a>
+        </div>
+        <div class="hero-trust">
+          <div class="trust-badge">
+            <span class="trust-icon" aria-hidden="true">✓</span>
+            Application reviewed in 48 hours
+          </div>
+          <div class="trust-badge">
+            <span class="trust-icon" aria-hidden="true">✓</span>
+            10 partners onboarded per month
+          </div>
+          <div class="trust-badge">
+            <span class="trust-icon" aria-hidden="true">✓</span>
+            Arizona inspectors only
+          </div>
+        </div>
+      </div>
+
+      <!-- VSL Placeholder -->
+      <div class="hero-visual">
+        <div class="vsl-card" role="button" tabindex="0" aria-label="Play: See how the ISS model works (3 min) — video coming soon">
+          <div class="vsl-thumbnail" style="background: linear-gradient(135deg, #1A3A5C 0%, #0F2240 100%);"></div>
+          <div class="vsl-overlay">
+            <div class="vsl-play" aria-hidden="true">
+              <svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path d="M8 5v14l11-7z"/></svg>
+            </div>
+            <div>
+              <div class="vsl-label">See how the ISS model works</div>
+              <div class="vsl-duration">3 min</div>
+            </div>
+          </div>
+          <!-- PLACEHOLDER: VSL video embed not yet live -->
+          <div class="vsl-coming-soon">Video coming soon</div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ========== PROBLEM / REVENUE MATH ========== -->
+  <section class="section section--alt" id="problem" aria-labelledby="problem-heading">
+    <div class="container">
+      <div class="section-label">The math you haven't run yet</div>
+      <h2 class="section-heading" id="problem-heading">What You're Giving Away Every Week</h2>
+      <p class="section-subhead">Every time a client asks about radon, sewer scoping, air quality, or solar — and you say "I don't do that" — money walks out the door. Here's what that actually costs you.</p>
+
+      <div class="revenue-grid" style="margin-top: 40px;">
+        <div class="revenue-card">
+          <div class="revenue-scenario">Client asks about sewer scope</div>
+          <div class="revenue-action">You say "I don't do that." You hand them a referral card.</div>
+          <div class="revenue-result">
+            <span class="revenue-amount">$85</span>
+            <span class="revenue-label">walks out the door</span>
+          </div>
+        </div>
+
+        <div class="revenue-card">
+          <div class="revenue-scenario">Client asks about radon testing</div>
+          <div class="revenue-action">You say "I don't do that." They find someone else.</div>
+          <div class="revenue-result">
+            <span class="revenue-amount">$100</span>
+            <span class="revenue-label">walks out the door</span>
+          </div>
+        </div>
+
+        <div class="revenue-card">
+          <div class="revenue-scenario">Client asks about air quality</div>
+          <div class="revenue-action">You say "I don't do that." Your agent has to make another call.</div>
+          <div class="revenue-result">
+            <span class="revenue-amount">$150</span>
+            <span class="revenue-label">walks out the door</span>
+          </div>
+        </div>
+      </div>
+
+      <div class="revenue-divider">
+        <div class="revenue-divider-line"></div>
+        <div class="revenue-divider-text">Do that 6 times a week, 50 weeks a year</div>
+        <div class="revenue-divider-line"></div>
+      </div>
+
+      <!-- Math Breakdown -->
+      <div class="math-breakdown">
+        <div class="math-row">
+          <div class="math-row-label">Sewer scope × 2 jobs/week</div>
+          <div class="math-row-math">$85 × 2 × 50 weeks</div>
+          <div class="math-row-total">$8,500/yr</div>
+        </div>
+        <div class="math-row">
+          <div class="math-row-label">Radon × 2 jobs/week</div>
+          <div class="math-row-math">$100 × 2 × 50 weeks</div>
+          <div class="math-row-total">$10,000/yr</div>
+        </div>
+        <div class="math-row">
+          <div class="math-row-label">Air quality × 1 job/week</div>
+          <div class="math-row-math">$150 × 1 × 50 weeks</div>
+          <div class="math-row-total">$7,500/yr</div>
+        </div>
+        <div class="math-row">
+          <div class="math-row-label">Solar assessment × 1 job/week</div>
+          <div class="math-row-math">$100 × 1 × 50 weeks</div>
+          <div class="math-row-total">$5,000/yr</div>
+        </div>
+        <div class="math-footer">
+          <div class="math-footer-label">Conservative estimate (30% attachment rate)</div>
+          <div class="math-footer-total">$31,000/yr</div>
+        </div>
+      </div>
+
+      <div class="annual-callout">
+        <div class="annual-label">At 50% attachment rate, the same schedule produces:</div>
+        <div class="annual-number">$50,000+/year</div>
+        <div class="annual-note">Same clients. Same schedule. Different conversation.</div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ========== HOW IT WORKS ========== -->
+  <section class="section" id="how-it-works" aria-labelledby="hiw-heading">
+    <div class="container">
+      <div class="section-label">Simple by design</div>
+      <h2 class="section-heading" id="hiw-heading">Three Steps. That's It.</h2>
+      <p class="section-subhead">No equipment to buy. No certifications to chase. No staff to manage. The model is built to add revenue without adding complexity.</p>
+
+      <div class="steps-grid">
+        <div class="step-card">
+          <div class="step-number" aria-hidden="true">1</div>
+          <h3 class="step-title">You offer the service</h3>
+          <p class="step-body">Under your business name, your brand. The client never knows ISS is involved. You're the one who handles everything — because you do.</p>
+        </div>
+
+        <div class="step-card">
+          <div class="step-number" aria-hidden="true">2</div>
+          <h3 class="step-title">ISS shows up and does the work</h3>
+          <p class="step-body">Our technicians handle the job from start to finish and deliver a co-branded report with your name and logo on it. You set the appointment. We handle the rest.</p>
+        </div>
+
+        <div class="step-card">
+          <div class="step-number" aria-hidden="true">3</div>
+          <h3 class="step-title">You invoice the client, keep the spread</h3>
+          <p class="step-body">You charge your client retail. You pay ISS the wholesale rate. The difference goes in your pocket. Every job. Every service.</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ========== SERVICES + PRICING ========== -->
+  <section class="section section--alt" id="services" aria-labelledby="services-heading">
+    <div class="container">
+      <div class="section-label">Clear pricing. No surprises.</div>
+      <h2 class="section-heading" id="services-heading">What ISS Offers — and What You Keep</h2>
+      <p class="section-subhead">Full pricing is provided on approval. The numbers below show you what the model looks like in practice.</p>
+
+      <div class="pricing-table-wrap">
+        <table class="pricing-table" aria-label="ISS service pricing">
+          <thead>
+            <tr>
+              <th scope="col">Service</th>
+              <th scope="col">You pay ISS</th>
+              <th scope="col">You charge client</th>
+              <th scope="col">You keep</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td class="service-name">Sewer Scope <span style="font-size:0.78rem; font-weight:400; color: var(--text-dim);">(bundled with inspection)</span></td>
+              <td class="cost-you">$210</td>
+              <td class="client-pays">$295</td>
+              <td class="spread">$85</td>
+            </tr>
+            <tr>
+              <td class="service-name">Sewer Scope <span style="font-size:0.78rem; font-weight:400; color: var(--text-dim);">(standalone)</span></td>
+              <td class="cost-you">$225</td>
+              <td class="client-pays">$295</td>
+              <td class="spread">$70</td>
+            </tr>
+            <tr>
+              <td class="service-name">Radon Testing</td>
+              <td class="cost-you">$275</td>
+              <td class="client-pays">$350–$395</td>
+              <td class="spread" style="color: var(--success);">$75–$120</td>
+            </tr>
+            <tr>
+              <td class="service-name">Air Quality Assessment <span style="font-size:0.78rem; font-weight:400; color: var(--text-dim);">(up to ~3,000 sf)</span></td>
+              <td class="cost-you">$400</td>
+              <td class="client-pays">~$550</td>
+              <td class="spread">$150</td>
+            </tr>
+            <tr>
+              <td class="service-name">Solar Assessment</td>
+              <td class="cost-you">$295</td>
+              <td class="client-pays">$395</td>
+              <td class="spread">$100</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+
+      <div class="pricing-notes">
+        <div class="pricing-note">🔗 Bundle discount: $50 off any two services on the same job</div>
+        <div class="pricing-note">📈 Volume discounts available at 5+ jobs/month</div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ========== WHAT YOU GET ========== -->
+  <section class="section" id="perks" aria-labelledby="perks-heading">
+    <div class="container">
+      <div class="section-label">Approved partners receive</div>
+      <h2 class="section-heading" id="perks-heading">What You Get When You're Approved</h2>
+      <p class="section-subhead">This isn't a referral card. Approved ISS partners get the infrastructure to run and sell these services professionally from day one.</p>
+
+      <div class="perks-grid">
+        <div class="perk-card">
+          <div class="perk-icon" aria-hidden="true">📄</div>
+          <div class="perk-content">
+            <h3>Co-Branded Reports</h3>
+            <p>Every service delivered with your name, your logo, your business. Clients see your brand, not ours.</p>
+          </div>
+        </div>
+
+        <div class="perk-card">
+          <div class="perk-icon" aria-hidden="true">💬</div>
+          <div class="perk-content">
+            <h3>Field Conversation Scripts</h3>
+            <p>Exactly what to say when offering these services on-site. No awkward upsells — just a natural conversation that converts.</p>
+          </div>
+        </div>
+
+        <div class="perk-card">
+          <div class="perk-icon" aria-hidden="true">🌐</div>
+          <div class="perk-content">
+            <h3>Marketing Infrastructure</h3>
+            <p>Ready-to-use landing pages and email sequences you can send to your clients — already written, already designed. Most providers don't give you this. We do.</p>
+          </div>
+        </div>
+
+        <div class="perk-card">
+          <div class="perk-icon" aria-hidden="true">📞</div>
+          <div class="perk-content">
+            <h3>15-Minute Welcome Call</h3>
+            <p>A direct walkthrough of the workflow, pricing sheet, and how to schedule your first job. You'll be ready to sell by the time we hang up.</p>
+          </div>
+        </div>
+
+        <div class="perk-card">
+          <div class="perk-icon" aria-hidden="true">📊</div>
+          <div class="perk-content">
+            <h3>Full Pricing Sheet</h3>
+            <p>Complete wholesale and suggested retail pricing for every service. Know your margins before your first job.</p>
+          </div>
+        </div>
+
+        <div class="perk-card">
+          <div class="perk-icon" aria-hidden="true">🤝</div>
+          <div class="perk-content">
+            <h3>Direct Access to ISS Operations</h3>
+            <p>Schedule jobs directly by phone or email. No ticketing system. No middleman. Just a working relationship that functions.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="first-job-banner">
+        <div class="first-job-icon" aria-hidden="true">🎯</div>
+        <div class="first-job-text">
+          <h3>First Job at Cost — Zero Risk</h3>
+          <p>Your first ISS job is completed at our cost. No spread required. You see the workflow in action, the report in your hands, and the client experience — before you've invested a dollar in it.</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ========== WHO THIS IS FOR ========== -->
+  <section class="section section--alt" id="who" aria-labelledby="who-heading">
+    <div class="container">
+      <div class="section-label">Is this for you?</div>
+      <h2 class="section-heading" id="who-heading">Who the ISS Network Is Built For</h2>
+      <p class="section-subhead">We're selective. Not every inspector is the right fit. Here's who we're looking to work with.</p>
+
+      <div class="criteria-list">
+        <div class="criteria-item">
+          <div class="criteria-check" aria-hidden="true">✓</div>
+          <div class="criteria-text">Licensed Arizona home inspector with an active book of business</div>
+        </div>
+        <div class="criteria-item">
+          <div class="criteria-check" aria-hidden="true">✓</div>
+          <div class="criteria-text">Currently referring out ancillary work — or just saying no when clients ask</div>
+        </div>
+        <div class="criteria-item">
+          <div class="criteria-check" aria-hidden="true">✓</div>
+          <div class="criteria-text">Has an established client base and wants to increase revenue per inspection</div>
+        </div>
+        <div class="criteria-item">
+          <div class="criteria-check" aria-hidden="true">✓</div>
+          <div class="criteria-text">Wants to strengthen agent relationships by offering a more complete service</div>
+        </div>
+        <div class="criteria-item">
+          <div class="criteria-check" aria-hidden="true">✓</div>
+          <div class="criteria-text">Looking to grow revenue without adding overhead, staff, or equipment</div>
+        </div>
+        <div class="criteria-item">
+          <div class="criteria-check" aria-hidden="true">✓</div>
+          <div class="criteria-text">Professional reputation in their market and takes their business seriously</div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ========== FAQ ========== -->
+  <section class="section" id="faq" aria-labelledby="faq-heading">
+    <div class="container">
+      <div class="section-label">Common questions</div>
+      <h2 class="section-heading" id="faq-heading">What Inspectors Usually Ask</h2>
+
+      <div class="faq-list" role="list">
+
+        <div class="faq-item" role="listitem">
+          <button class="faq-question" aria-expanded="false" aria-controls="faq-1">
+            Do I need special equipment or certifications to offer these services?
+            <span class="faq-icon" aria-hidden="true">+</span>
+          </button>
+          <div class="faq-answer" id="faq-1" role="region">
+            <p>No. You don't buy equipment. You don't get certified. You don't take on any liability beyond what you already carry as an inspector. ISS provides the technicians, the equipment, and the insurance. Your job is to offer the service and schedule it. We handle everything else.</p>
+          </div>
+        </div>
+
+        <div class="faq-item" role="listitem">
+          <button class="faq-question" aria-expanded="false" aria-controls="faq-2">
+            Who actually shows up and does the work?
+            <span class="faq-icon" aria-hidden="true">+</span>
+          </button>
+          <div class="faq-answer" id="faq-2" role="region">
+            <p>ISS technicians. They're trained, equipped, and covered. You schedule the job, they show up, they do the work, and they deliver the completed report. Your client sees your name and logo on the report. The ISS technician's role is operational, not client-facing in a way that disrupts your relationship.</p>
+          </div>
+        </div>
+
+        <div class="faq-item" role="listitem">
+          <button class="faq-question" aria-expanded="false" aria-controls="faq-3">
+            What does the report look like?
+            <span class="faq-icon" aria-hidden="true">+</span>
+          </button>
+          <div class="faq-answer" id="faq-3" role="region">
+            <p>The report is co-branded — your logo, your business name, your contact information. The client receives a professional report that looks like it came from your company, because as far as the client experience goes, it did. ISS branding is not front-facing on client deliverables.</p>
+          </div>
+        </div>
+
+        <div class="faq-item" role="listitem">
+          <button class="faq-question" aria-expanded="false" aria-controls="faq-4">
+            What if my service area already has ISS partners?
+            <span class="faq-icon" aria-hidden="true">+</span>
+          </button>
+          <div class="faq-answer" id="faq-4" role="region">
+            <p>Apply anyway. We review each application individually and consider service area, volume, and fit. If we're at capacity in your market, we'll put you on the waitlist and reach out when a spot opens. Waitlisted applicants are first in line.</p>
+          </div>
+        </div>
+
+        <div class="faq-item" role="listitem">
+          <button class="faq-question" aria-expanded="false" aria-controls="faq-5">
+            How do I schedule a job once I'm approved?
+            <span class="faq-icon" aria-hidden="true">+</span>
+          </button>
+          <div class="faq-answer" id="faq-5" role="region">
+            <p>Directly — by phone or email to ISS operations. No ticketing system. No online scheduler you have to figure out. You call or email, the job gets on the calendar, and that's it. The workflow is simple by design.</p>
+          </div>
+        </div>
+
+        <div class="faq-item" role="listitem">
+          <button class="faq-question" aria-expanded="false" aria-controls="faq-6">
+            Is there a monthly fee or subscription?
+            <span class="faq-icon" aria-hidden="true">+</span>
+          </button>
+          <div class="faq-answer" id="faq-6" role="region">
+            <p>No. You only pay ISS when you run a job. There's no monthly minimum, no access fee, and no commitment. If you do one job a month, you pay for one job. If you do ten, volume discounts kick in automatically.</p>
+          </div>
+        </div>
+
+      </div>
+    </div>
+  </section>
+
+  <!-- ========== APPLICATION FORM ========== -->
+  <section class="apply-section section--darker" id="apply" aria-labelledby="apply-heading">
+    <div class="apply-inner">
+      <div class="section-label">Limited availability</div>
+      <h2 class="section-heading" id="apply-heading">Apply to Join the ISS Partner Network</h2>
+      <p class="section-subhead" style="margin: 0 auto 28px;">Not everyone gets approved. We onboard 10 new partners per month. The application takes about 3 minutes and review happens within 48 hours.</p>
+
+      <!-- Scarcity Banner -->
+      <div class="scarcity-banner">
+        <span class="scarcity-icon" aria-hidden="true">⚡</span>
+        <span class="scarcity-text">We onboard 10 new partners per month. <span>3 spots remaining this month.</span></span>
+        <!-- PLACEHOLDER: Update spot count dynamically or manually each month -->
+      </div>
+
+      <!-- GHL Form Embed -->
+      <div class="ghl-form-wrap">
+        <!-- GHL FORM EMBED — paste GoHighLevel form embed code here when ready -->
+        <div class="ghl-form-embed" style="min-height:400px; display:flex; align-items:center; justify-content:center;">
+          <div class="ghl-placeholder">
+            <div class="placeholder-icon" aria-hidden="true">📋</div>
+            <p style="color:#666;">Application form loading...</p>
+          </div>
+        </div>
+      </div>
+
+      <p class="form-note">
+        No sales call required. We review every application within 48 hours and reach out with a decision. If we're not the right fit right now, we'll tell you that too.
+      </p>
+    </div>
+  </section>
+
+  <!-- ========== FOOTER ========== -->
+  <footer class="footer" role="contentinfo">
+    <div class="footer-inner">
+      <div class="footer-top">
+        <div class="footer-logo">
+          <img src="iss-logo-v2-horizontal-lockup.jpg" alt="Inspection Support Services" />
+        </div>
+        <nav aria-label="Footer navigation">
+          <ul class="footer-links">
+            <li><a href="#how-it-works">How It Works</a></li>
+            <li><a href="#services">Services</a></li>
+            <li><a href="#apply">Apply Now</a></li>
+            <!-- PLACEHOLDER: Replace [ISS EMAIL] with real contact email -->
+            <li class="footer-contact"><a href="mailto:[ISS EMAIL]">Contact</a></li>
+          </ul>
+        </nav>
+      </div>
+      <div class="footer-bottom">
+        <p>Inspection Support Services is operated by Breathe Easy LLC. Serving Arizona home inspectors.</p>
+        <!-- PLACEHOLDER: Add privacy policy / terms links if needed -->
+      </div>
+    </div>
+  </footer>
+
+  <!-- ========== JS: FAQ ACCORDION ========== -->
+  <script>
+    // FAQ Accordion
+    document.querySelectorAll('.faq-question').forEach(function(btn) {
+      btn.addEventListener('click', function() {
+        var item = this.closest('.faq-item');
+        var isOpen = item.classList.contains('open');
+
+        // Close all
+        document.querySelectorAll('.faq-item').forEach(function(el) {
+          el.classList.remove('open');
+          el.querySelector('.faq-question').setAttribute('aria-expanded', 'false');
+        });
+
+        // Open clicked if it was closed
+        if (!isOpen) {
+          item.classList.add('open');
+          this.setAttribute('aria-expanded', 'true');
+        }
+      });
+    });
+
+    // VSL placeholder click (no-op for now — just prevents broken feel)
+    var vslCard = document.querySelector('.vsl-card');
+    if (vslCard) {
+      vslCard.addEventListener('click', function() {
+        // PLACEHOLDER: Replace with actual video embed when VSL is ready
+        console.log('VSL not yet live.');
+      });
+      vslCard.addEventListener('keydown', function(e) {
+        if (e.key === 'Enter' || e.key === ' ') {
+          e.preventDefault();
+          this.click();
+        }
+      });
+    }
+  </script>
+
+</body>
+</html>
