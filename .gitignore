@@ -1,1 +1,8 @@
 .vercel
+.env
+.env.*
+node_modules
+# Raw Claude Design exports (multi-MB, superseded by *-CLEAN.html sources)
+ISS Partner Application.html
+ISS Partner Landing.html
+__pycache__
