@@ -35,6 +35,13 @@ const GHL_VERSION = "2021-07-28";
 // To re-list:  python3 projects/ghl-cli/ghl.py custom-fields list -l breatheeasy --json
 // ---------------------------------------------------------------------------
 const CF = {
+  // "As-submitted" application fields. These ALWAYS capture exactly what the
+  // applicant typed, even when GHL's no-duplicate rule merges the submission
+  // into a pre-existing contact (matched by phone) whose primary email/company
+  // are different/stale. This is the source of truth for the application.
+  APPLIED_EMAIL: "rSPCMofynR8Mj9XzXda5",         // "ISS Applied Email" (TEXT)
+  APPLIED_BUSINESS_NAME: "PTCckIPhit8lwTatWK7w", // "ISS Applied Business Name" (TEXT)
+  APPLIED_PHONE: "BBVmEBzA220mb3y029OX",         // "ISS Applied Phone" (TEXT)
   SERVICE_AREA: "uXqDkKSJDSWny9z2HYDm",          // "Primary Service Area" (LARGE_TEXT, existing)
   INSPECTIONS_PER_MONTH: "9vHzd7RT7v0QwIzQHD99",  // "Average Inspections Per Month" (NUMERICAL, existing)
   SERVICES_REFERRED_OUT: "SsMJ8xipBBan1sHHVFa7",  // "ISS Services Referred Out" (TEXT)
@@ -89,7 +96,9 @@ function buildNotes(p) {
   const lines = [
     "ISS Partner Application",
     "------------------------",
-    `Business: ${p.company || "—"}`,
+    `Business (as submitted): ${p.company || "—"}`,
+    `Applicant email (as submitted): ${p.email || "—"}`,
+    `Applicant phone (as submitted): ${p.phone || "—"}`,
     `Service area: ${p.area || "—"}`,
     `Inspections per month: ${p.volume || "—"}`,
     `Services referred out today: ${services || "—"}`,
@@ -112,6 +121,10 @@ function buildCustomFields(p) {
       out.push({ id, field_value: value });
     }
   };
+  // As-submitted truth — captured no matter which contact GHL merges into.
+  push(CF.APPLIED_EMAIL, p.email);
+  push(CF.APPLIED_BUSINESS_NAME, p.company);
+  push(CF.APPLIED_PHONE, p.phone);
   push(CF.SERVICE_AREA, p.area);
   push(CF.INSPECTIONS_PER_MONTH, p.volume);
   push(CF.SERVICES_REFERRED_OUT, servicesList(p));
@@ -176,23 +189,44 @@ module.exports = async function handler(req, res) {
   const { firstName, lastName } = splitName(p.name);
   const customFields = buildCustomFields(p);
 
-  // The full field set we want on the contact, applied identically whether the
-  // contact is brand-new or an existing duplicate.
-  const contactFields = {
+  // IMPORTANT — contact-match / no-duplicate behavior:
+  // This Breathe Easy location is configured to NOT allow duplicate contacts.
+  // GHL dedupes by phone (and/or email). So a returning/known person (e.g. an
+  // owner already in the CRM under a different identity/email) who applies will
+  // be MATCHED to their existing contact, and POST /contacts/ returns 400 with
+  // that contact's id. The applicant's submitted email/company would then be
+  // masked by the stale record.
+  //
+  // Strategy:
+  //   - IDENTITY fields (email, firstName, lastName, name): only set when we
+  //     CREATE a brand-new contact. On a match we do NOT overwrite them, so we
+  //     never corrupt a real person's canonical record with the application's
+  //     contact email. The application's true email/phone/company are instead
+  //     preserved in the ISS_APPLIED_* custom fields (always written, both
+  //     paths) — so the submitted data ALWAYS wins where it matters.
+  //   - BUSINESS fields (companyName, website, address1/service area, all
+  //     enablement custom fields, source): safe to update on a match too.
+  const identityFields = {
     firstName,
     lastName,
     name: p.name,
     email: p.email || undefined,
     phone: p.phone || undefined,
+  };
+  const businessFields = {
     companyName: p.company || undefined,
     website: p.website || undefined,
     address1: p.area || undefined, // service area, best-effort mapping
     source: "ISS Partner Landing Page",
   };
-  if (customFields.length) contactFields.customFields = customFields;
+  if (customFields.length) businessFields.customFields = customFields;
 
   // ---- 1) Create contact (POST /contacts/) ----
-  const contactPayload = Object.assign({ locationId, tags: ["iss-partner-application"] }, contactFields);
+  const contactPayload = Object.assign(
+    { locationId, tags: ["iss-partner-application"] },
+    identityFields,
+    businessFields
+  );
   Object.keys(contactPayload).forEach((k) => contactPayload[k] === undefined && delete contactPayload[k]);
 
   let contactId;
@@ -233,12 +267,15 @@ module.exports = async function handler(req, res) {
     return;
   }
 
-  // ---- 1b) If the contact already existed (e.g. created earlier by phone),
-  // the POST above does NOT update it. PUT the application data onto it so the
-  // company name, website, service area, and all custom fields populate.
+  // ---- 1b) If the contact already existed (matched by phone/email), the POST
+  // above does NOT update it. PUT the BUSINESS data + enablement custom fields
+  // onto it (company, website, service area, ISS_* fields). We deliberately do
+  // NOT push identity fields here, so the matched contact's canonical email and
+  // name are left intact — the application's true email/company/phone live in
+  // the ISS_APPLIED_* custom fields (included in businessFields.customFields).
   if (wasDuplicate) {
     try {
-      const updatePayload = Object.assign({}, contactFields);
+      const updatePayload = Object.assign({}, businessFields);
       Object.keys(updatePayload).forEach((k) => updatePayload[k] === undefined && delete updatePayload[k]);
       const r = await fetch(`${GHL_BASE}/contacts/${contactId}`, {
         method: "PUT",
