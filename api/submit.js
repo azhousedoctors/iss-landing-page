@@ -1,20 +1,53 @@
 // ISS Partner Application — Vercel serverless function.
-// Receives the application form POST (JSON), creates a GHL contact, tags it,
-// and (once pipeline IDs are provisioned) drops an opportunity into the ISS
-// pipeline. Mirrors the REST calls in projects/ghl-cli/ghl.py.
+// Receives the application form POST (JSON), creates/updates a GHL contact,
+// maps every enablement answer to a dedicated custom field, tags it, attaches
+// a human-readable note, and drops an opportunity into the ISS pipeline.
+// Mirrors the REST calls in projects/ghl-cli/ghl.py.
 //
 // GHL API: base https://services.leadconnectorhq.com, Bearer auth,
 //          Version: 2021-07-28 header.
 //
 // Required env vars (set in Vercel project settings — NEVER commit):
-//   GHL_API_KEY      location API key
-//   GHL_LOCATION_ID  matching location id
-// Gated (Phase 3b — drop in once Hank provisions the ISS pipeline):
-//   GHL_PIPELINE_ID  ISS pipeline id
-//   GHL_STAGE_ID     first stage (new application) id
+//   GHL_API_KEY      location API key  (Breathe Easy)
+//   GHL_LOCATION_ID  matching location id (g5Y1tSfwVfelJu6fbSF9)
+//   GHL_PIPELINE_ID  ISS pipeline id (6syqBAylxnFNuqcnYwqx)
+//   GHL_STAGE_ID     New Application stage (47047cee-f52e-431b-afc6-1d3e06ade258)
+//
+// NOTE on the form↔webhook contract: the browser POSTs the payload built by
+// buildPayload() in apply.html (generated from build_apply.py). That payload
+// uses these keys — which is what we read below:
+//   name, company, email, phone, area, volume, website,
+//   services (array), leak (number), emailsAgents ("yes"/"no"/null),
+//   agentsExample, emailsClients, clientsExample, promoToday,
+//   wantsPromoBuild ("yes"/"no"/null)
+// The raw form input name="" attributes (agentsExample, clientsExample,
+// promoToday, etc.) are a SUBSET; the JS state machine adds services/leak/
+// the yes-no toggles. The keys below match buildPayload(), end to end.
 
 const GHL_BASE = "https://services.leadconnectorhq.com";
 const GHL_VERSION = "2021-07-28";
+
+// ---------------------------------------------------------------------------
+// GHL custom field IDs (Breathe Easy location g5Y1tSfwVfelJu6fbSF9).
+// Field IDs are NOT secrets — safe to hardcode. Created/verified 2026-06-21.
+//   - SERVICE_AREA / INSPECTIONS_PER_MONTH reuse pre-existing fields.
+//   - The ISS_* fields were created specifically for this application.
+// To re-list:  python3 projects/ghl-cli/ghl.py custom-fields list -l breatheeasy --json
+// ---------------------------------------------------------------------------
+const CF = {
+  SERVICE_AREA: "uXqDkKSJDSWny9z2HYDm",          // "Primary Service Area" (LARGE_TEXT, existing)
+  INSPECTIONS_PER_MONTH: "9vHzd7RT7v0QwIzQHD99",  // "Average Inspections Per Month" (NUMERICAL, existing)
+  SERVICES_REFERRED_OUT: "SsMJ8xipBBan1sHHVFa7",  // "ISS Services Referred Out" (TEXT)
+  EST_MONTHLY_REVENUE_LEAK: "uRZPmhu8egnilDKlN3BN", // "ISS Est Monthly Revenue Leak" (NUMERICAL)
+  EMAILS_AGENTS: "OibMeaVLj7JikoOdg9f2",          // "ISS Emails Agents" (TEXT, Yes/No)
+  EMAILS_CLIENTS: "Mlc2EU4usK2pBI7hSD57",         // "ISS Emails Clients" (TEXT, Yes/No)
+  PROMOTES_ADDONS_TODAY: "N35NwDRkUjVB01n8fEX4",  // "ISS Promotes Add-ons Today" (LARGE_TEXT)
+  WANTS_ISS_BUILD_PROMO: "N7XOHA77lYCH9sFNC4vT",  // "ISS Wants ISS To Build Promo" (TEXT, Yes/No)
+  AGENTS_EXAMPLE: "cPBlRwiaX9DQhITIGyga",         // "ISS Agents Example" (LARGE_TEXT)
+  CLIENTS_EXAMPLE: "Kx7c9N5OoSpSCmjvUmy1",        // "ISS Clients Example" (LARGE_TEXT)
+};
+
+const JUNK_TAG = "couldn't find caller name";
 
 function ghlHeaders(apiKey) {
   return {
@@ -32,9 +65,10 @@ function splitName(full) {
   return { firstName: parts[0], lastName: parts.slice(1).join(" ") };
 }
 
-function bool(v) {
-  if (v === true || v === "yes") return "Yes";
-  if (v === false || v === "no") return "No";
+// Normalize a yes/no answer ("yes"/"no"/true/false/null) to "Yes"/"No"/"".
+function yesno(v) {
+  if (v === true || v === "yes" || v === "Yes") return "Yes";
+  if (v === false || v === "no" || v === "No") return "No";
   return "";
 }
 
@@ -44,24 +78,54 @@ function money(n) {
   return "$" + Math.round(num).toLocaleString("en-US");
 }
 
-// Build a human-readable notes block from the enablement answers, so the data
-// is captured even before custom fields are provisioned in GHL.
+function servicesList(p) {
+  return Array.isArray(p.services) ? p.services.join(", ") : "";
+}
+
+// Build a human-readable notes block (belt-and-suspenders alongside the
+// structured custom fields).
 function buildNotes(p) {
-  const services = Array.isArray(p.services) ? p.services.join(", ") : "";
+  const services = servicesList(p);
   const lines = [
     "ISS Partner Application",
     "------------------------",
+    `Business: ${p.company || "—"}`,
     `Service area: ${p.area || "—"}`,
     `Inspections per month: ${p.volume || "—"}`,
     `Services referred out today: ${services || "—"}`,
     `Est. monthly revenue walking away: ${money(p.leak) || "—"}  (~${money(Number(p.leak) * 12) || "—"}/yr)`,
     `Website: ${p.website || "—"}`,
-    `Emails agents: ${bool(p.emailsAgents) || "—"}${p.agentsExample ? ` (example: ${p.agentsExample})` : ""}`,
-    `Emails clients: ${bool(p.emailsClients) || "—"}${p.clientsExample ? ` (example: ${p.clientsExample})` : ""}`,
+    `Emails agents: ${yesno(p.emailsAgents) || "—"}${p.agentsExample ? ` (example: ${p.agentsExample})` : ""}`,
+    `Emails clients: ${yesno(p.emailsClients) || "—"}${p.clientsExample ? ` (example: ${p.clientsExample})` : ""}`,
     `Promotes add-ons today: ${p.promoToday || "—"}`,
-    `Wants ISS to build promo: ${bool(p.wantsPromoBuild) || "—"}`,
+    `Wants ISS to build promo: ${yesno(p.wantsPromoBuild) || "—"}`,
   ];
   return lines.join("\n");
+}
+
+// Map the enablement answers to GHL custom fields. Only include fields that
+// actually have a value, so we never blank out existing data on a dup update.
+function buildCustomFields(p) {
+  const out = [];
+  const push = (id, value) => {
+    if (value !== undefined && value !== null && String(value).trim() !== "") {
+      out.push({ id, field_value: value });
+    }
+  };
+  push(CF.SERVICE_AREA, p.area);
+  push(CF.INSPECTIONS_PER_MONTH, p.volume);
+  push(CF.SERVICES_REFERRED_OUT, servicesList(p));
+  // leak: always a number from the slider; record it explicitly (even default).
+  if (p.leak !== undefined && p.leak !== null && String(p.leak).trim() !== "") {
+    out.push({ id: CF.EST_MONTHLY_REVENUE_LEAK, field_value: Number(p.leak) || 0 });
+  }
+  push(CF.EMAILS_AGENTS, yesno(p.emailsAgents));
+  push(CF.EMAILS_CLIENTS, yesno(p.emailsClients));
+  push(CF.PROMOTES_ADDONS_TODAY, p.promoToday);
+  push(CF.WANTS_ISS_BUILD_PROMO, yesno(p.wantsPromoBuild));
+  push(CF.AGENTS_EXAMPLE, p.agentsExample);
+  push(CF.CLIENTS_EXAMPLE, p.clientsExample);
+  return out;
 }
 
 async function readJsonBody(req) {
@@ -110,10 +174,11 @@ module.exports = async function handler(req, res) {
   }
 
   const { firstName, lastName } = splitName(p.name);
+  const customFields = buildCustomFields(p);
 
-  // ---- 1) Create contact (POST /contacts/) ----
-  const contactPayload = {
-    locationId,
+  // The full field set we want on the contact, applied identically whether the
+  // contact is brand-new or an existing duplicate.
+  const contactFields = {
     firstName,
     lastName,
     name: p.name,
@@ -122,14 +187,16 @@ module.exports = async function handler(req, res) {
     companyName: p.company || undefined,
     website: p.website || undefined,
     address1: p.area || undefined, // service area, best-effort mapping
-    tags: ["iss-partner-application"],
     source: "ISS Partner Landing Page",
-    // Enablement answers captured as notes (see buildNotes). When ISS custom
-    // fields are provisioned, map them here as customFields: [{id, value}].
   };
+  if (customFields.length) contactFields.customFields = customFields;
+
+  // ---- 1) Create contact (POST /contacts/) ----
+  const contactPayload = Object.assign({ locationId, tags: ["iss-partner-application"] }, contactFields);
   Object.keys(contactPayload).forEach((k) => contactPayload[k] === undefined && delete contactPayload[k]);
 
   let contactId;
+  let wasDuplicate = false;
   try {
     const r = await fetch(`${GHL_BASE}/contacts/`, {
       method: "POST",
@@ -144,6 +211,7 @@ module.exports = async function handler(req, res) {
         (body && body.contact && body.contact.id);
       if (r.status === 400 && dupId) {
         contactId = dupId;
+        wasDuplicate = true;
         console.warn(`[iss/submit] Duplicate contact, reusing ${contactId}.`);
       } else {
         console.error(`[iss/submit] contact create failed HTTP ${r.status}:`, JSON.stringify(body));
@@ -165,6 +233,27 @@ module.exports = async function handler(req, res) {
     return;
   }
 
+  // ---- 1b) If the contact already existed (e.g. created earlier by phone),
+  // the POST above does NOT update it. PUT the application data onto it so the
+  // company name, website, service area, and all custom fields populate.
+  if (wasDuplicate) {
+    try {
+      const updatePayload = Object.assign({}, contactFields);
+      Object.keys(updatePayload).forEach((k) => updatePayload[k] === undefined && delete updatePayload[k]);
+      const r = await fetch(`${GHL_BASE}/contacts/${contactId}`, {
+        method: "PUT",
+        headers: ghlHeaders(apiKey),
+        body: JSON.stringify(updatePayload),
+      });
+      if (!r.ok) {
+        const body = await r.json().catch(() => ({}));
+        console.error(`[iss/submit] dup contact update failed HTTP ${r.status}:`, JSON.stringify(body));
+      }
+    } catch (e) {
+      console.warn("[iss/submit] dup contact update non-fatal error:", e && e.message);
+    }
+  }
+
   // ---- 2) Ensure the tag is applied (idempotent; create payload already tags) ----
   try {
     await fetch(`${GHL_BASE}/contacts/${contactId}/tags`, {
@@ -176,7 +265,21 @@ module.exports = async function handler(req, res) {
     console.warn("[iss/submit] tag add non-fatal error:", e && e.message);
   }
 
-  // ---- 3) Attach the enablement answers as a contact note ----
+  // ---- 2b) Strip the GHL "couldn't find caller name" junk tag if present.
+  // (Gets auto-added when a contact is first created by the phone API before
+  // a proper first/last name is on file. We always send a clean name, so this
+  // tag is noise — remove it.)
+  try {
+    await fetch(`${GHL_BASE}/contacts/${contactId}/tags`, {
+      method: "DELETE",
+      headers: ghlHeaders(apiKey),
+      body: JSON.stringify({ tags: [JUNK_TAG] }),
+    });
+  } catch (e) {
+    console.warn("[iss/submit] junk tag remove non-fatal error:", e && e.message);
+  }
+
+  // ---- 3) Attach the enablement answers as a contact note (belt + suspenders) ----
   try {
     await fetch(`${GHL_BASE}/contacts/${contactId}/notes`, {
       method: "POST",
@@ -188,15 +291,9 @@ module.exports = async function handler(req, res) {
   }
 
   // ---- 4) Create opportunity in the ISS pipeline ----
-  // =====================================================================
-  // TODO (Phase 3b — GATED): pipeline drop. Hank is provisioning the ISS
-  // pipeline + first stage in parallel. Once GHL_PIPELINE_ID and
-  // GHL_STAGE_ID are set in Vercel env, this block activates automatically.
   // Endpoint + payload mirror ghl.py cmd_opportunities_create():
   //   POST /opportunities/  { locationId, contactId, pipelineId,
   //                           pipelineStageId, name, monetaryValue, status }
-  // DO NOT invent pipeline/stage IDs — leave gated on the env vars.
-  // =====================================================================
   const pipelineId = process.env.GHL_PIPELINE_ID;
   const stageId = process.env.GHL_STAGE_ID;
   let opportunityId = null;
@@ -228,7 +325,7 @@ module.exports = async function handler(req, res) {
       console.warn("[iss/submit] opportunity create non-fatal error:", e && e.message);
     }
   } else {
-    console.warn("[iss/submit] GHL_PIPELINE_ID/GHL_STAGE_ID not set — skipping opportunity create (Phase 3b gated).");
+    console.warn("[iss/submit] GHL_PIPELINE_ID/GHL_STAGE_ID not set — skipping opportunity create.");
   }
 
   res.status(200).json({ ok: true, contactId, opportunityId });
