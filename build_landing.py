@@ -170,6 +170,83 @@ vanilla_js = """<script>
       }
     });
   });
+
+  // Revenue calculator — multi-service chip model (works on touch + mouse)
+  (function () {
+    var jobs = document.getElementById('issJobs');
+    var attach = document.getElementById('issAttach');
+    var weeks = document.getElementById('issWeeks');
+    if (!jobs || !attach || !weeks) return;
+    var jobsV = document.getElementById('issJobsVal');
+    var attachV = document.getElementById('issAttachVal');
+    var weeksV = document.getElementById('issWeeksVal');
+    var outMonth = document.getElementById('issOutMonth');
+    var outYear = document.getElementById('issOutYear');
+    var echo = document.getElementById('issEcho');
+    var scalingCue = document.getElementById('issScalingCue');
+    var chips = Array.prototype.slice.call(document.querySelectorAll('#issChipGrid .iss-chip'));
+
+    function money(n) { return '$' + Math.round(n).toLocaleString('en-US'); }
+
+    function getSpread() {
+      var total = 0;
+      chips.forEach(function (chip) {
+        if (chip.classList.contains('active')) {
+          total += parseInt(chip.getAttribute('data-val'), 10);
+        }
+      });
+      return total;
+    }
+
+    function getActiveCount() {
+      return chips.filter(function (c) { return c.classList.contains('active'); }).length;
+    }
+
+    function recalc() {
+      var j = +jobs.value;
+      var a = +attach.value / 100;
+      var w = +weeks.value;
+      var s = getSpread();
+      var perYear = j * a * s * w;
+      var perMonth = perYear / 12;
+      jobsV.textContent = j;
+      attachV.textContent = attach.value + '%';
+      weeksV.textContent = w;
+      outMonth.innerHTML = money(perMonth) + '<span class="suf">/mo</span>';
+      outYear.innerHTML = money(perYear) + '<span class="suf">/yr</span>';
+      var n = getActiveCount();
+      var svcLabel = n === 1 ? '1 service' : n + ' services';
+      echo.textContent = svcLabel + ', ' + j + ' jobs/week, ' + attach.value + '% attach';
+      // 65% scaling cue
+      if (scalingCue) {
+        if (+attach.value >= 65) {
+          scalingCue.classList.add('show');
+          outYear.style.color = '#3DB088';
+        } else {
+          scalingCue.classList.remove('show');
+          outYear.style.color = '';
+        }
+      }
+    }
+
+    // Chip toggle
+    chips.forEach(function (chip) {
+      chip.addEventListener('click', function () {
+        var isActive = chip.classList.contains('active');
+        chip.classList.toggle('active');
+        chip.setAttribute('aria-pressed', !isActive ? 'true' : 'false');
+        var box = chip.querySelector('.iss-chip-box');
+        if (box) box.textContent = !isActive ? '\u2713' : '';
+        recalc();
+      });
+    });
+
+    [jobs, attach, weeks].forEach(function (el) {
+      el.addEventListener('input', recalc);
+      el.addEventListener('change', recalc);
+    });
+    recalc();
+  })();
 })();
 </script>"""
 
