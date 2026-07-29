@@ -50,22 +50,23 @@ if m:
     src = src[:start] + src[end:]
 
 # ---------------------------------------------------------------------------
-# 2) Resolve hero sc-if blocks: keep Opportunity (isOpp=true), drop Loss.
-#    <sc-if value="{{ isOpp }}" ...> ... </sc-if>  -> inner kept
-#    <sc-if value="{{ isLoss }}" ...> ... </sc-if> -> removed
+# 2) Resolve hero sc-if blocks: keep Loss (isLoss=true), drop Opportunity.
+#    Loss-framed hero converts better (loss aversion > gain framing).
+#    <sc-if value="{{ isLoss }}" ...> ... </sc-if>  -> inner kept
+#    <sc-if value="{{ isOpp }}" ...> ... </sc-if> -> removed
 # ---------------------------------------------------------------------------
 def strip_scif(m):
     """Keep inner content (unwrap)."""
     return m.group(1)
 
-# isOpp -> keep inner
+# isLoss -> keep inner
 src = re.sub(
-    r"<sc-if value=\"\{\{ isOpp \}\}\"[^>]*>(.*?)</sc-if>",
+    r"<sc-if value=\"\{\{ isLoss \}\}\"[^>]*>(.*?)</sc-if>",
     strip_scif, src, flags=re.DOTALL,
 )
-# isLoss -> drop entirely
+# isOpp -> drop entirely
 src = re.sub(
-    r"<sc-if value=\"\{\{ isLoss \}\}\"[^>]*>.*?</sc-if>",
+    r"<sc-if value=\"\{\{ isOpp \}\}\"[^>]*>.*?</sc-if>",
     "", src, flags=re.DOTALL,
 )
 
