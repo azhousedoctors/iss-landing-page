@@ -18,15 +18,20 @@ with open(SRC, "r", encoding="utf-8") as f:
 services = [
     {"name": "Solar + energy audit", "cost": "from $247", "charge": "$325\u2013395", "keep": "$78\u2013148"},
     {"name": "Radon (single)",       "cost": "from $225", "charge": "$295\u2013350", "keep": "$70\u2013125"},
-    {"name": "Sewer scope",          "cost": "from $215", "charge": "$275",        "keep": "$60"},
+    {"name": "Sewer scope",          "cost": "from $215", "charge": "$275–350",  "keep": "$60–135"},
     {"name": "Air quality",          "cost": "from $80/pod", "charge": "$125\u2013150/pod", "keep": "$45\u201370/pod"},
     {"name": "Mold (tape / swab)",   "cost": "from $70/sample", "charge": "$125/sample", "keep": "$55/sample"},
 ]
 faqData = [
+    {"q": "Aren't you my competitor?", "a": "Partly, yes, and we'd rather say it than have you find it on Google. Konnor runs his own inspection company in the East Valley. So the partner agreement carries a written non-solicit from us to you: we do not market to, contact, or accept general inspection work from any client or agent we meet on your job. If one of them calls us anyway, we send them back to you. No Breathe Easy cards, signs, or shirts on your jobs. Break that and you can terminate the same day. Our business only works if yours grows."},
+    {"q": "Whose paperwork does my client sign?", "a": "Yours. We give you a one-paragraph addendum that names Inspection Support Services as the independent third-party provider and extends your agreement's limitations to us. Drop it into the agreement your software already sends. If you'd rather we send our own white-label agreement under your brand, we can do that instead. Your call, once, at onboarding."},
+    {"q": "Whose insurance is on the hook?", "a": "Ours. ISS carries its own general liability and E&O through OREP on every service we deliver. The report is co-branded, but the findings are ours and the liability is ours. A certificate of insurance is in your onboarding packet. This is not you subcontracting a guy under your license."},
+    {"q": "How fast do reports come back?", "a": "Sewer scope: same day. Solar: within 24 hours, co-branded with SPRK Pro. Air quality: 24 hours from the lab. Radon: the report goes out the day the 48-hour test ends. Your deals live inside inspection periods; we don't sit on finished reports."},
+    {"q": "How do I pay you?", "a": "You pay when the report is delivered, not before. We invoice your card on delivery, and after the first job it's saved so you never think about it again. No monthly fee, no setup fee."},
     {"q": "Whose brand is on the report?", "a": "Yours. Every report, every email, every piece of promo carries your logo and your name. To your client and their agent, this is a service you offer. We stay behind the scenes."},
     {"q": "Do I need to buy equipment or get certified?", "a": "No. ISS handles the service delivery and the reporting. You add the service to your quote. We do the work. That is the whole point of a white-label partner."},
     {"q": "What does it cost to join?", "a": "Nothing to apply and nothing to be a partner. You pay a flat partner rate per service you order, and you keep the spread between that and what you charge your client."},
-    {"q": "How fast can I start offering services?", "a": "Most partners are set up within a week of approval. After your welcome call you have co-branded reports and the scripts ready to go."},
+    {"q": "How fast can I start offering services?", "a": "You're set up within a week of approval. After your welcome call you have co-branded reports and the scripts ready to go."},
     {"q": "I am outside the Phoenix area. Can I still join?", "a": "Not yet. ISS currently serves the Greater Phoenix area. Tell us where you are anyway, so we can reach out when we expand."},
 ]
 
