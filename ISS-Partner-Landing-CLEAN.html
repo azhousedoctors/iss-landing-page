@@ -200,10 +200,10 @@
               <span>Radon</span>
               <span class="iss-chip-val">+$97</span>
             </button>
-            <button type="button" class="iss-chip active" data-svc="sewer" data-val="70" aria-pressed="true">
+            <button type="button" class="iss-chip active" data-svc="sewer" data-val="130" aria-pressed="true">
               <span class="iss-chip-box">&#10003;</span>
               <span>Sewer scope</span>
-              <span class="iss-chip-val">+$70</span>
+              <span class="iss-chip-val">+$130</span>
             </button>
             <button type="button" class="iss-chip" data-svc="air" data-val="57" aria-pressed="false">
               <span class="iss-chip-box"></span>
@@ -385,8 +385,9 @@
         <div style="font-size:12px;font-weight:700;letter-spacing:.12em;text-transform:uppercase;color:#F4C542;margin-bottom:6px;">Spots remaining</div>
         <div style="font-family:'Playfair Display',serif;font-weight:800;font-size:52px;line-height:1;color:#F5F5F7;">10</div>
       </div>
+      <div style="font-size:15.5px;color:#E8EDF4;margin-bottom:40px;">Sewer scope: <strong style="color:#F5F5F7;">$225/$195</strong> founding partner rate</div>
       <div class="reveal" style="display:grid;grid-template-columns:repeat(3,1fr);gap:18px;text-align:left;margin-bottom:40px;">
-        <div style="background:#1A2E4A;border:1px solid rgba(255,255,255,.07);border-radius:14px;padding:24px;display:flex;gap:11px;align-items:flex-start;"><span style="color:#3DB088;font-weight:800;flex:none;">✓</span><span style="font-size:15.5px;color:#E8EDF4;line-height:1.5;">Your partner rate locks permanently. Later partners pay more. You won&#8217;t.</span></div>
+        <div style="background:#1A2E4A;border:1px solid rgba(255,255,255,.07);border-radius:14px;padding:24px;display:flex;gap:11px;align-items:flex-start;"><span style="color:#3DB088;font-weight:800;flex:none;">✓</span><span style="font-size:15.5px;color:#E8EDF4;line-height:1.5;">Your $195 rate locks in for as long as you&#8217;re a partner. Later partners pay $225.</span></div>
         <div style="background:#1A2E4A;border:1px solid rgba(255,255,255,.07);border-radius:14px;padding:24px;display:flex;gap:11px;align-items:flex-start;"><span style="color:#3DB088;font-weight:800;flex:none;">✓</span><span style="font-size:15.5px;color:#E8EDF4;line-height:1.5;">Your first job runs at our cost. Keep everything you charged above it.</span></div>
         <div style="background:#1A2E4A;border:1px solid rgba(255,255,255,.07);border-radius:14px;padding:24px;display:flex;gap:11px;align-items:flex-start;"><span style="color:#3DB088;font-weight:800;flex:none;">✓</span><span style="font-size:15.5px;color:#E8EDF4;line-height:1.5;">Co-branded report template, on-site script, and an agent one-pager built for you in week one.</span></div>
       </div>
@@ -470,7 +471,7 @@ class Component extends DCLogic {
     const services = [
       { name: 'Solar + energy audit', cost: 'from $247', charge: '$325\u2013395', keep: '$78\u2013148' },
       { name: 'Radon (single)', cost: 'from $225', charge: '$295\u2013350', keep: '$70\u2013125' },
-      { name: 'Sewer scope', cost: 'from $215', charge: '$275', keep: '$60' },
+      { name: 'Sewer scope', cost: '$225 / $195 founding', charge: '$325', keep: '$100 / $130' },
       { name: 'Air quality', cost: 'from $80/pod', charge: '$125\u2013150/pod', keep: '$45\u201370/pod' },
       { name: 'Mold (tape / swab)', cost: 'from $70/sample', charge: '$125/sample', keep: '$55/sample' },
     ];

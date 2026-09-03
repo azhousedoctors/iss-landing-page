@@ -18,7 +18,7 @@ with open(SRC, "r", encoding="utf-8") as f:
 services = [
     {"name": "Solar + energy audit", "cost": "from $247", "charge": "$325\u2013395", "keep": "$78\u2013148"},
     {"name": "Radon (single)",       "cost": "from $225", "charge": "$295\u2013350", "keep": "$70\u2013125"},
-    {"name": "Sewer scope",          "cost": "from $215", "charge": "$275–350",  "keep": "$60–135"},
+    {"name": "Sewer scope",          "cost": "$225 / $195 founding", "charge": "$325",  "keep": "$100 / $130"},
     {"name": "Air quality",          "cost": "from $80/pod", "charge": "$125\u2013150/pod", "keep": "$45\u201370/pod"},
     {"name": "Mold (tape / swab)",   "cost": "from $70/sample", "charge": "$125/sample", "keep": "$55/sample"},
 ]
