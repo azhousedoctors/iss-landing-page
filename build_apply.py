@@ -165,6 +165,13 @@ vanilla = r"""<script>
     el.addEventListener('change', function () { data[el.name] = el.value; });
   });
 
+  // Sync data object from live DOM values (captures browser autofill / back-nav pre-fill)
+  function syncFieldsFromDOM() {
+    $all('input[data-field], textarea[data-field]').forEach(function (el) {
+      if (el.name) data[el.name] = el.value;
+    });
+  }
+
   // --- progress bars ---
   var bars = $all('#iss-form .iss-step').length ? null : null;
   function syncProgress() {
@@ -202,6 +209,7 @@ vanilla = r"""<script>
 
   // --- nav ---
   function next() {
+    syncFieldsFromDOM(); // capture autofilled / pre-filled values before validating
     if (state.step === 0) {
       if (!data.name || !data.email || !data.phone) {
         showErr('Please add your name, email, and phone so we can reach you.');
@@ -310,6 +318,7 @@ vanilla = r"""<script>
   }
 
   function submit() {
+    syncFieldsFromDOM(); // ensure autofilled values are captured in payload
     var btn = $('#iss-submit');
     var payload = buildPayload();
     showErr('');

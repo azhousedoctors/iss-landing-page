@@ -206,7 +206,15 @@ class Component extends DCLogic {
 
   fmt(n) { return '$' + Math.round(n).toLocaleString(); }
 
+  syncFieldsFromDOM = () => {
+    // Sync data object from current DOM values so autofill/back-nav are captured
+    document.querySelectorAll('input.iss-in, textarea.iss-in').forEach(el => {
+      if (el.name) this.data[el.name] = el.value;
+    });
+  };
+
   next = () => {
+    this.syncFieldsFromDOM(); // capture autofilled / pre-filled values before validating
     if (this.state.step === 0) {
       if (!this.data.name || !this.data.email || !this.data.phone) {
         this.setState({ err: 'Please add your name, email, and phone so we can reach you.' });
@@ -218,6 +226,7 @@ class Component extends DCLogic {
   };
   back = () => { this.setState(s => ({ step: Math.max(s.step - 1, 0), err: '' })); window.scrollTo({ top: 0, behavior: 'smooth' }); };
   submit = () => {
+    this.syncFieldsFromDOM(); // ensure autofilled values are captured in payload
     // collect everything (ready for GHL post)
     const payload = { ...this.data, services: Object.keys(this.state.services).filter(k => this.state.services[k]), monthlyLeakage: this.state.leak, emailsAgents: this.state.agents, emailsClients: this.state.clients, wantPromoBuilt: this.state.promo };
     try { console.log('ISS application payload', payload); } catch (e) {}
