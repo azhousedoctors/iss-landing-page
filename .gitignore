@@ -7,3 +7,4 @@ ISS Partner Application.html
 ISS Partner Landing.html
 __pycache__
 *.bak-*
+.env*.local
