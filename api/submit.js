@@ -216,7 +216,8 @@ module.exports = async function handler(req, res) {
   const businessFields = {
     companyName: p.company || undefined,
     website: p.website || undefined,
-    address1: p.area || undefined, // service area, best-effort mapping
+    // NOTE: service area is NOT written to address1 — on a duplicate match the PUT
+    // would overwrite the contact's real mailing address. It lives in CF.SERVICE_AREA.
     source: "ISS Partner Landing Page",
   };
   if (customFields.length) businessFields.customFields = customFields;
@@ -267,6 +268,26 @@ module.exports = async function handler(req, res) {
     return;
   }
 
+  // Partial-integration failures. The application is already captured on the contact
+  // by this point, so none of these block the applicant — but they MUST be visible
+  // and retryable instead of silently swallowed.
+  const warnings = [];
+  const warn = (step, detail) => {
+    warnings.push({ step, detail: String(detail).slice(0, 300) });
+    console.error(`[iss/submit] RETRY-NEEDED step=${step} contact=${contactId}:`, detail);
+  };
+  // Check a GHL response and record a warning when it failed.
+  const checked = async (step, promise) => {
+    try {
+      const r = await promise;
+      if (!r.ok) warn(step, `HTTP ${r.status} ${JSON.stringify(await r.json().catch(() => ({})))}`);
+      return r;
+    } catch (e) {
+      warn(step, (e && e.message) || e);
+      return null;
+    }
+  };
+
   // ---- 1b) If the contact already existed (matched by phone/email), the POST
   // above does NOT update it. PUT the BUSINESS data + enablement custom fields
   // onto it (company, website, service area, ISS_* fields). We deliberately do
@@ -274,38 +295,28 @@ module.exports = async function handler(req, res) {
   // name are left intact — the application's true email/company/phone live in
   // the ISS_APPLIED_* custom fields (included in businessFields.customFields).
   if (wasDuplicate) {
-    try {
-      const updatePayload = Object.assign({}, businessFields);
-      Object.keys(updatePayload).forEach((k) => updatePayload[k] === undefined && delete updatePayload[k]);
-      const r = await fetch(`${GHL_BASE}/contacts/${contactId}`, {
-        method: "PUT",
-        headers: ghlHeaders(apiKey),
-        body: JSON.stringify(updatePayload),
-      });
-      if (!r.ok) {
-        const body = await r.json().catch(() => ({}));
-        console.error(`[iss/submit] dup contact update failed HTTP ${r.status}:`, JSON.stringify(body));
-      }
-    } catch (e) {
-      console.warn("[iss/submit] dup contact update non-fatal error:", e && e.message);
-    }
+    const updatePayload = Object.assign({}, businessFields);
+    Object.keys(updatePayload).forEach((k) => updatePayload[k] === undefined && delete updatePayload[k]);
+    await checked("dup-contact-update", fetch(`${GHL_BASE}/contacts/${contactId}`, {
+      method: "PUT",
+      headers: ghlHeaders(apiKey),
+      body: JSON.stringify(updatePayload),
+    }));
   }
 
   // ---- 2) Ensure the tag is applied (idempotent; create payload already tags) ----
-  try {
-    await fetch(`${GHL_BASE}/contacts/${contactId}/tags`, {
-      method: "POST",
-      headers: ghlHeaders(apiKey),
-      body: JSON.stringify({ tags: ["iss-partner-application"] }),
-    });
-  } catch (e) {
-    console.warn("[iss/submit] tag add non-fatal error:", e && e.message);
-  }
+  await checked("tag-add", fetch(`${GHL_BASE}/contacts/${contactId}/tags`, {
+    method: "POST",
+    headers: ghlHeaders(apiKey),
+    body: JSON.stringify({ tags: ["iss-partner-application"] }),
+  }));
 
   // ---- 2b) Strip the GHL "couldn't find caller name" junk tag if present.
   // (Gets auto-added when a contact is first created by the phone API before
   // a proper first/last name is on file. We always send a clean name, so this
   // tag is noise — remove it.)
+  // Not wrapped in checked(): a failure here means a cosmetic tag stayed put,
+  // which is not worth flagging for retry.
   try {
     await fetch(`${GHL_BASE}/contacts/${contactId}/tags`, {
       method: "DELETE",
@@ -317,15 +328,11 @@ module.exports = async function handler(req, res) {
   }
 
   // ---- 3) Attach the enablement answers as a contact note (belt + suspenders) ----
-  try {
-    await fetch(`${GHL_BASE}/contacts/${contactId}/notes`, {
-      method: "POST",
-      headers: ghlHeaders(apiKey),
-      body: JSON.stringify({ body: buildNotes(p) }),
-    });
-  } catch (e) {
-    console.warn("[iss/submit] note add non-fatal error:", e && e.message);
-  }
+  await checked("note-add", fetch(`${GHL_BASE}/contacts/${contactId}/notes`, {
+    method: "POST",
+    headers: ghlHeaders(apiKey),
+    body: JSON.stringify({ body: buildNotes(p) }),
+  }));
 
   // ---- 4) Create opportunity in the ISS pipeline ----
   // Endpoint + payload mirror ghl.py cmd_opportunities_create():
@@ -334,6 +341,7 @@ module.exports = async function handler(req, res) {
   const pipelineId = process.env.GHL_PIPELINE_ID;
   const stageId = process.env.GHL_STAGE_ID;
   let opportunityId = null;
+  let opportunityOutcome = "skipped"; // created | existing-reused | failed | skipped
   if (pipelineId && stageId) {
     try {
       const oppPayload = {
@@ -351,19 +359,38 @@ module.exports = async function handler(req, res) {
         body: JSON.stringify(oppPayload),
       });
       const body = await r.json().catch(() => ({}));
-      if (!r.ok) {
-        console.error(`[iss/submit] opportunity create failed HTTP ${r.status}:`, JSON.stringify(body));
-        // Non-fatal: the contact is already saved. Still report ok so the
-        // applicant isn't blocked; the lead is captured + tagged.
-      } else {
+      if (r.ok) {
         opportunityId = (body.opportunity && body.opportunity.id) || body.id || null;
+        opportunityOutcome = "created";
+      } else if (body && body.code === "OPPORTUNITY_NO_DUPLICATE") {
+        // Repeat applicant: this contact already has an opportunity in this
+        // pipeline. GHL hands back its id. Reconcile to it and REPORT it —
+        // deliberately WITHOUT touching its stage. An already-active partner
+        // must never be dragged back to "New Application" by re-applying.
+        opportunityId = (body.meta && body.meta.existingId) || null;
+        opportunityOutcome = "existing-reused";
+        console.warn(`[iss/submit] Existing opportunity ${opportunityId} reused for contact ${contactId}; stage left unchanged.`);
+        if (!opportunityId) warn("opportunity-duplicate-no-id", JSON.stringify(body));
+      } else {
+        opportunityOutcome = "failed";
+        warn("opportunity-create", `HTTP ${r.status} ${JSON.stringify(body)}`);
       }
     } catch (e) {
-      console.warn("[iss/submit] opportunity create non-fatal error:", e && e.message);
+      opportunityOutcome = "failed";
+      warn("opportunity-create", (e && e.message) || e);
     }
   } else {
     console.warn("[iss/submit] GHL_PIPELINE_ID/GHL_STAGE_ID not set — skipping opportunity create.");
   }
 
-  res.status(200).json({ ok: true, contactId, opportunityId });
+  // ok:true means the APPLICATION IS CAPTURED on the contact. opportunityOutcome and
+  // warnings say whether the pipeline side fully succeeded, so a partial failure is
+  // recorded rather than reported as a clean success.
+  res.status(200).json({
+    ok: true,
+    contactId,
+    opportunityId,
+    opportunityOutcome,
+    warnings: warnings.length ? warnings : undefined,
+  });
 };

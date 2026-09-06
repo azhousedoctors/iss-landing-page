@@ -5,6 +5,7 @@ static, deployable index.html. Mirrors the renderVals() logic from the export's
 <script type="text/x-dc"> block. Preserves all inlined data-URI lines untouched.
 """
 import re, sys, html
+import build_shared
 
 SRC = "ISS-Partner-Landing-CLEAN.html"
 OUT = "index.html"
@@ -18,7 +19,8 @@ with open(SRC, "r", encoding="utf-8") as f:
 services = [
     {"name": "Solar + energy audit", "cost": "from $247", "charge": "$325\u2013395", "keep": "$78\u2013148"},
     {"name": "Radon (single)",       "cost": "from $225", "charge": "$295\u2013350", "keep": "$70\u2013125"},
-    {"name": "Sewer scope",          "cost": "$225 / $195 founding", "charge": "$275–350",  "keep": "$80–155"},
+    {"name": "Sewer scope (standard)",  "cost": "$225", "charge": "$275–350",  "keep": "$50–125"},
+    {"name": "Sewer scope (founding)",  "cost": "$195", "charge": "$275–350",  "keep": "$80–155"},
     {"name": "Air quality",          "cost": "from $80/pod", "charge": "$125\u2013150/pod", "keep": "$45\u201370/pod"},
     {"name": "Mold (tape / swab)",   "cost": "from $70/sample", "charge": "$125/sample", "keep": "$55/sample"},
 ]
@@ -268,6 +270,24 @@ src = re.sub(
 src = src.replace("<x-dc>", "").replace("</x-dc>", "")
 src = src.replace("<helmet>", "").replace("</helmet>", "")
 
+# ---------------------------------------------------------------------------
+# 8) Head metadata + 9) un-embed images. Both live in build_shared.py so the
+#    landing page and the application page stay in step.
+# ---------------------------------------------------------------------------
+SITE = "https://inspectionsupportservices.com"
+src = build_shared.inject_head_meta(
+    src,
+    title="Inspection Support Services | White-Label Ancillary Inspections, Phoenix",
+    description=(
+        "Add sewer scope, radon, air quality, solar, and mold to the inspections you "
+        "already run. No equipment to buy, no new certifications. Co-branded reports "
+        "go out under your name across Greater Phoenix."
+    ),
+    canonical=SITE + "/",
+    image=SITE + "/iss-logo-v2-horizontal-lockup.jpg",
+)
+src, _img_saved = build_shared.externalize_images(src)
+
 # Sanity: no template tokens should remain
 leftover = re.findall(r"\{\{[^}]*\}\}", src)
 if leftover:
@@ -276,4 +296,5 @@ if leftover:
 with open(OUT, "w", encoding="utf-8") as f:
     f.write(src)
 
-print("Wrote %s (%d bytes). Leftover tokens: %d" % (OUT, len(src), len(leftover)))
+print("Wrote %s (%d bytes). Images externalized, saved %d bytes. Leftover tokens: %d"
+      % (OUT, len(src), _img_saved, len(leftover)))

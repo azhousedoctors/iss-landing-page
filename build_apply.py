@@ -7,6 +7,7 @@ conditional reveals) and POSTs to /api/submit, rendering the confirmation on
 ok:true. Preserves all inlined data-URI lines untouched.
 """
 import re, sys
+import build_shared
 
 SRC = "ISS-Partner-Application-CLEAN.html"
 OUT = "apply.html"
@@ -357,6 +358,20 @@ src = re.sub(
 src = src.replace("<x-dc>", "").replace("</x-dc>", "")
 src = src.replace("<helmet>", "").replace("</helmet>", "")
 
+# Head metadata + un-embed images (shared with build_landing.py).
+SITE = "https://inspectionsupportservices.com"
+src = build_shared.inject_head_meta(
+    src,
+    title="Partner Application | Inspection Support Services",
+    description=(
+        "Apply to add sewer scope, radon, air quality, solar, and mold to your "
+        "inspections. Takes a few minutes. Greater Phoenix inspectors only."
+    ),
+    canonical=SITE + "/apply",
+    image=SITE + "/iss-logo-v2-horizontal-lockup.jpg",
+)
+src, _img_saved = build_shared.externalize_images(src)
+
 leftover = re.findall(r"\{\{[^}]*\}\}", src)
 if leftover:
     sys.stderr.write("LEFTOVER TOKENS: %r\n" % leftover[:30])
@@ -364,4 +379,5 @@ if leftover:
 with open(OUT, "w", encoding="utf-8") as f:
     f.write(src)
 
-print("Wrote %s (%d bytes). Leftover tokens: %d" % (OUT, len(src), len(leftover)))
+print("Wrote %s (%d bytes). Images externalized, saved %d bytes. Leftover tokens: %d"
+      % (OUT, len(src), _img_saved, len(leftover)))
