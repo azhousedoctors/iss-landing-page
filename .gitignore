@@ -6,3 +6,4 @@ node_modules
 ISS Partner Application.html
 ISS Partner Landing.html
 __pycache__
+*.bak-*
